@@ -1,53 +1,92 @@
 const pagarme = require('pagarme');
-
 const Boleto = require('../models/Boleto');
-const User = require('../models/User');
+
+// Loggin
+const logginDateTime = require('../config/logginMethods').dateAndTimeLoggin;
 
 module.exports = {
 
     /* --- Save a boleto at database --- */
     async store(req,res){
-        const {user_id} = req.headers;
-        const {boletoId, boletoNumber, boletoUrl, validDate,
-            emissionDate, paymentDate, status, boletoValue} = req.body;
 
-        try {
-            let boleto = await Boleto.create({
-                user_id,
-                boletoId,
-                boletoNumber, 
-                boletoUrl, 
-                validDate,
-                emissionDate, 
-                paymentDate, 
-                status, 
-                boletoValue
-            });
-            
-            return res.json(boleto);
-
-        } catch (err) {
-            return res.status(400).json(err);
+        const boletoInfo = {
+            user_id: req.body.customer.external_id,
+            boletoId: req.body.id,
+            boletoNumber: req.body.boleto_barcode,
+            boletoUrl: req.body.boleto_url,
+            validDate: req.body.boleto_expiration_date,
+            emissionDate: req.body.date_created,
+            paymentDate: null,
+            status: req.body.status,
+            boletoValue: req.body.amount
         }
 
-        return res.json({boleto});
+        try {
+            let boleto = await Boleto.create(boletoInfo);
+            
+            return boleto;
+
+        } catch (err) {
+            console.error(logginDateTime() + ' Error at Store boleto -> ' + err);
+            return err;
+        }
+
     },
 
-    /* --- Update a boleto's status --- */
-    async update_status(req, res){
-        const {status, _id} = req.body;
+    /* --- Delete all boletos reference to a user_id --- */
+    async deleteAll(user_id){
+        if (!user_id) {
+            return JSON.stringify({error: {msg: 'user_id is missing', method: 'BoletoController -> deleteAll'}});
+        }
+        
+        try {
+            let rtn = await Boleto.deleteMany({user_id});
+            
+            return JSON.stringify(rtn);
 
-        if (!status) {
-            return res.json({code: 500, msg:'current_status is missing'});
+        } catch (error) {
+            throw error;
+        }
+
+    },
+
+    async delete(req,res){
+        if (!req.body._id) {
+            return res.status(400).json({error: {msg: '_id params is missing', locale: 'boleto/delete => delete'}});
         }
 
         try {
-            let updated = await Boleto.findOneAndUpdate({_id}, {status});
-            
-            return res.json(updated);
+            const {_id} = req.body;
+            let boleto = await Boleto.deleteOne({_id});
+
+            //Loggin
+            console.log(logginDateTime() + ' => deleteBoleto => ' + _id);
+
+            return res.json(boleto);
+        } catch (error) {
+            console.log(logginDateTime() + '---- ERROR at deleteBoleto -> boleto/delete ----');
+            console.error(error);
+            return res.status(500).json(error);
+        }
+
+    },
+    /* --- Update a boleto's status --- */
+    async update_status(req){
+        const {status, id} = req.body;
+
+        if (!status || !id) {
+            return JSON.stringify({code: 500, msg:'current_status is missing'});
+        }
+
+        try {
+
+            let boleto = await Boleto.find({boletoId: id});
+            let updated = await Boleto.updateOne({_id: boleto[0]._id}, {status: status});
+        
+            return boleto;
 
         } catch (err) {
-            return res.status(400).json(err);
+            throw err;
         }   
     },
 
@@ -154,4 +193,51 @@ module.exports = {
         .then(transactions => console.log(transactions))
         .catch(err => console.log(err));
     },
+
+    /* ------Make a customer at Pagamer API ----------- */
+    makeCustomer(customerData) {
+        return new Promise((resolve, reject) => {
+          
+            if (customerData) {
+          
+            var typeCustomer;
+            var typeDocument;
+
+            if (customerData.document.length == 11) {
+              typeCustomer = 'individual';
+              typeDocument = 'cpf';
+              
+            } else {
+              typeCustomer = 'corporation';
+              typeDocument = 'cnpj';        
+            }
+          
+            pagarme.client.connect({ api_key: process.env.API_KEY_PAGARME })
+            .then(client => client.customers.create({
+              external_id: `${customerData._id}`,
+              name: `${customerData.name}`,
+              type:  `${typeCustomer}`,
+              country: 'br',
+              email: `${customerData.email}`,
+              documents: [
+                {
+                  type: `${typeDocument}`,
+                  number: `${customerData.document}`
+                }
+              ],
+              phone_numbers: [`${customerData.phone}`]
+            }))
+            .then(customer => {
+                resolve(customer);
+            })
+            .catch(err => {
+                reject(err);
+            });
+    
+          }else{
+            reject(new Error('method makeCustomer -> customerData is missing some data'));
+          }
+        })
+    },
+
 }

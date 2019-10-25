@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const tasks = require('./config/tasks');
 
 dotenv.config();
 
@@ -13,7 +14,7 @@ mongoose.connect('mongodb+srv://hasf:gsagml20@hasf-gofom.mongodb.net/backend?ret
     useUnifiedTopology: true,
     useCreateIndex: true,
     useFindAndModify: false,
-});
+}); 
 
 app.use(express.json());
 app.use(routes); 

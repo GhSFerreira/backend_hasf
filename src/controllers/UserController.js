@@ -1,4 +1,8 @@
 const User = require('../models/User');
+const BoletoControllers = require('./BoletoController');
+
+//Loggin methods
+const logginDateAndTime = require('../config/logginMethods').dateAndTimeLoggin;
 
 module.exports = {
     /* --- Create user at database ----*/
@@ -7,10 +11,26 @@ module.exports = {
             return res.json({code: 422, msg: 'create user -> params is missing'});
         }
 
+        let user, client;
         try {
-            let user = await User.create(req.body);
-            return res.json(user);
+            let customer = await BoletoControllers.makeCustomer(req.body);
+            
+            //Rewrite pagarmeId in req.body with the id received by customer
+            req.body.pagarmeId = customer.id;
+
+            user = await User.create(req.body);
+            
+            console.log('--------- Create a User --------');
+            console.log('customer => ' + customer);
+            console.log('user => ' + user);
+            console.log('--------- End - Create a User --------');
+            
+            
+
+            return res.json ({customer,user});
         } catch (err) {
+            console.log(user);
+            
             return res.json(err);
         }
 
@@ -28,9 +48,23 @@ module.exports = {
             let user = await User.deleteOne({_id});
 
             if (!user.n) {
+                console.log('------- START delete user ---------');
+                console.log(logginDateAndTime() + ' => deleteUser => Error: Didnt delete the user '+ _id);
                 return res.status(422).json(user);
             }else{
-                return res.json(user);
+
+                let boletos = await BoletoControllers.deleteAll(_id);
+
+                if (boletos.error) {
+                    console.log(logginDateAndTime() + ' => deleteUser => Error: Didnt delete the all boleto -> user_id: '+ _id);
+                    return res.status(404).json(boletos);
+                }else{
+                    /* ----- Loggin ----- */
+                    console.log(logginDateAndTime() + ' => deleteUser => '+ _id);
+                    console.log('--------- END delete user ------');
+                    
+                    return res.json({user, boletos});
+                } 
             }
 
         } catch (err) {

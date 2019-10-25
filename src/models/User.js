@@ -52,6 +52,31 @@ const UserSchema = new mongoose.Schema({
         type: String,
         maxlength: 30,
         required: [true, 'state is required']        
+    },
+    pagarmeId: {
+        type: Number,
+        required:[true, 'pagarmeId is required'],
+        unique: true,
+    },
+    kwh: {
+        type: Number,
+        required: [true, 'Kwh is required']
+    },
+    systemValue: {
+        type: Number,
+        required: [true, 'systemValue is required']
+    },
+    paymentType: {
+        type: String,
+        enum: ['avista', 'financiado'],
+        required: [true, 'paymentType is required']
+    },
+    loanEnded: Boolean,
+    payDay: {
+        type: Number,
+        min: 1,
+        max: 15,
+        required: [true, 'paymentDay is required']
     }
 
 })

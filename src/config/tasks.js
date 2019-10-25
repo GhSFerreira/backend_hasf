@@ -1,21 +1,17 @@
-const cronjob = require('cron').CronJob;
+const CronJob = require('cron').CronJob;
 const axios = require('axios').default;
+const BoletoController = require('../controllers/BoletoController');
 
 /* Method to get funded clients and make boleto for them  */ 
-const makeBoletosMonthFinanciado = new cronjob(process.env.MAKE_BOLETO_DATE, async () => {
-  
-    console.log('------Executed-------');
+const makeBoletosMonthFinanciado = new CronJob('0 04 21 15 * *', () => {
     
-
-    try {   
-        let clients = await axios.get('/client/funded',{ 
-            paymentType: 'financiado',
-            loanEnded: false,
-         });
-         console.log(clients);
-         
-    } catch (err) {
-        console.error(err);
-    }
-
+    axios.get('http://localhost:4444/client/funded?paymenttype=financiado&loanended=false')
+        .then(rs => {
+            rs.data.forEach(clientData => {
+                BoletoController.makeBoleto(clientData);
+            });
+        })
+        .catch(err => console.error(err))
+   
 }, null ,true);
+
