@@ -11,7 +11,11 @@ module.exports = {
             return res.sendStatus(404);
         }
 
-        return res.json(user);
+        let userInfo = {
+            _id: user._id
+        };
+
+        return res.json(userInfo);
     },
 
 }

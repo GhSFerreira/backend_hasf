@@ -71,11 +71,11 @@ module.exports = {
                 subject: 'Hasf Energia - Sua fatura de energia já está disponível ',
                 template: 'faturaHasf.ejs',
                 mailData: {
-                    name: req.body.customer.name,
-                    mail: req.body.customer.email,
-                    boleto_amount: req.body.amount,
-                    boleto_barcode: req.body.boleto_barcode,
-                    boleto_url: req.body.boleto_url
+                    name: req.body["transaction[customer][name]"],
+                    mail: req.body["transaction[customer][email]"],
+                    boleto_amount: (req.body["transaction[amount]"] / 100),
+                    boleto_barcode: req.body["transaction[boleto_barcode]"],
+                    boleto_url: req.body["transaction[boleto_url]"]
                 }}
         }
         await this.sendEmail(mailInfo, res);

@@ -2,7 +2,9 @@ const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
     document: {
-        type: Number,
+        type: String,
+        minlength: [11, 'cpf/cnpj is too short'],
+        maxlength: [14, 'cpf/cnpj is too big'],
         required: [true, 'document is required'],
         unique: true
     },
@@ -53,11 +55,7 @@ const UserSchema = new mongoose.Schema({
         maxlength: 30,
         required: [true, 'state is required']        
     },
-    pagarmeId: {
-        type: Number,
-        required:[true, 'pagarmeId is required'],
-        unique: true,
-    },
+    pagarmeId: Number,
     kwh: {
         type: Number,
         required: [true, 'Kwh is required']
@@ -65,6 +63,11 @@ const UserSchema = new mongoose.Schema({
     systemValue: {
         type: Number,
         required: [true, 'systemValue is required']
+    },
+    systemId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'System',
+        required: [true, 'systemId is required']
     },
     paymentType: {
         type: String,

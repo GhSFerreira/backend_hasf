@@ -1,16 +1,9 @@
 const mongoose = require('mongoose');
 
 const FactorySchema = new mongoose.Schema({
-    factoryName: {
-        type: String,
-        unique: true,
-    },
+    factoryName: String,
     power: Number,
     address: String,
-    members: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }],
     monitor: String
 })
 

@@ -11,27 +11,25 @@ module.exports = {
             return res.json({code: 422, msg: 'create user -> params is missing'});
         }
 
-        let user, client;
         try {
-            let customer = await BoletoControllers.makeCustomer(req.body);
-            
-            //Rewrite pagarmeId in req.body with the id received by customer
-            req.body.pagarmeId = customer.id;
 
-            user = await User.create(req.body);
+            let user = await User.create(req.body);
             
-            console.log('--------- Create a User --------');
-            console.log('customer => ' + customer);
-            console.log('user => ' + user);
+            let customer = await BoletoControllers.makeCustomer(user);
+
+            let userUpdate = await User.findByIdAndUpdate(user._id, {pagarmeId: customer.id})
+
+            console.log(' --------- Create a User --------');
+            console.log(logginDateAndTime() + ' customer => ' + customer);
+            console.log(logginDateAndTime() + ' user => ' + user);
             console.log('--------- End - Create a User --------');
             
             
 
-            return res.json ({customer,user});
+            return res.json({customer,user});
         } catch (err) {
-            console.log(user);
-            
-            return res.json(err);
+            console.error(logginDateAndTime() + ' ERROR: user -> store => ' + err);
+            return res.status(500).json(err);
         }
 
     },
@@ -50,6 +48,8 @@ module.exports = {
             if (!user.n) {
                 console.log('------- START delete user ---------');
                 console.log(logginDateAndTime() + ' => deleteUser => Error: Didnt delete the user '+ _id);
+                console.log('--------- END delete user ------');
+
                 return res.status(422).json(user);
             }else{
 
@@ -57,6 +57,8 @@ module.exports = {
 
                 if (boletos.error) {
                     console.log(logginDateAndTime() + ' => deleteUser => Error: Didnt delete the all boleto -> user_id: '+ _id);
+                    console.log('--------- END delete user ------');
+
                     return res.status(404).json(boletos);
                 }else{
                     /* ----- Loggin ----- */
@@ -74,10 +76,22 @@ module.exports = {
 
     //TODO: Update user at DB
     async update(req,res){
-        if (!req.body) {
-            return res.json({code: 500, msg: 'req.body params is missing at update user'});
+        const {_id} = req.headers;
+
+        if (!req.body || !_id) {
+            return res.status(400).json({code: 500, msg: 'req.body params is missing at update user'});
         }
 
+        try {
+            let user = await User.findByIdAndUpdate(_id, req.body);
+            console.log(logginDateAndTime() + ' -> update - user => _id: ' + _id);
+            
+            return res.json(user);
+
+        } catch (err) {
+            console.error(logginDateAndTime() + ' ERROR: user -> update => ' + err);
+            return res.status(500).json(err);
+        }
 
     },
 
@@ -93,7 +107,7 @@ module.exports = {
 
     /* ---- Show user by id --- */
     async show(req,res){
-        const {_id} = req.body;
+        const { _id } = req.headers;
 
         if (!_id) {
             return res.status(400).json({msg: '_id params is missing -> show -> User'});
@@ -114,17 +128,14 @@ module.exports = {
     },
 
     /* ---- Find user by name ---- */
-    async findUserByName(req,res){
-        console.log(req.params);
-        
-        const {name} = req.params;
+    async findUser(req,res){
 
-        if (!name) {
+        if (!req.query) {
             return res.json({code: 422, msg: 'name params is missing at finUserByName'});
         }
 
         try {
-            let users = await User.find({name});
+            let users = await User.find(req.query);
             return res.json(users);
         } catch (err) {
             return res.json(err);

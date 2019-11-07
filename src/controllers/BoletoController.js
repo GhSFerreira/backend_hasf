@@ -8,17 +8,18 @@ module.exports = {
 
     /* --- Save a boleto at database --- */
     async store(req,res){
+        const body = req.body;
 
         const boletoInfo = {
-            user_id: req.body.customer.external_id,
-            boletoId: req.body.id,
-            boletoNumber: req.body.boleto_barcode,
-            boletoUrl: req.body.boleto_url,
-            validDate: req.body.boleto_expiration_date,
-            emissionDate: req.body.date_created,
+            user_id: body["transaction[customer][external_id]"],
+            boletoId: body.id,
+            boletoNumber: body["transaction[boleto_barcode]"],
+            boletoUrl: body["transaction[boleto_url]"],
+            validDate: body["transaction[boleto_expiration_date]"],
+            emissionDate: body["transaction[date_created]"],
             paymentDate: null,
-            status: req.body.status,
-            boletoValue: req.body.amount
+            status: body.current_status,
+            boletoValue: body["transaction[amount]"]
         }
 
         try {
@@ -27,8 +28,7 @@ module.exports = {
             return boleto;
 
         } catch (err) {
-            console.error(logginDateTime() + ' Error at Store boleto -> ' + err);
-            return err;
+            throw err;
         }
 
     },
@@ -71,23 +71,38 @@ module.exports = {
 
     },
     /* --- Update a boleto's status --- */
-    async update_status(req){
-        const {status, id} = req.body;
+    async update_status(reqBody){
+        const {current_status, id} = reqBody;
 
-        if (!status || !id) {
+        if (!current_status || !id) {
             return JSON.stringify({code: 500, msg:'current_status is missing'});
         }
 
         try {
 
             let boleto = await Boleto.find({boletoId: id});
-            let updated = await Boleto.updateOne({_id: boleto[0]._id}, {status: status});
+            let updated = await Boleto.updateOne({_id: boleto[0]._id}, {status: current_status});
         
             return boleto;
 
         } catch (err) {
             throw err;
         }   
+    },
+
+    /* Update a boleto as paid boleto - status, paymentDate*/
+    async update_paid(updateData){
+        const {id, current_status} = updateData;
+        const paymentDate = updateData["transaction[date_updated]"];
+
+        try {
+            let updated = await Boleto.updateOne({boletoId: id}, {paymentDate, status: current_status});
+
+            return updated;
+            
+        } catch (error) {
+            throw error;
+        }
     },
 
     /* --- Show all boletos at DB ---- */
@@ -175,13 +190,11 @@ module.exports = {
             expirate_date = date.getUTCFullYear() + '-' + month + '-' + userData.payDay;      
         }
     
-        console.log(expirate_date);
-    
         pagarme.client.connect({ api_key: process.env.API_KEY_PAGARME })    
         .then(client => client.transactions.create({
             amount: userData.systemValue,
             payment_method: 'boleto',
-            postback_url: `${process.env.SERVER_ADDRESS}/payments/postback_url`,
+            postback_url: `${process.env.SERVER_ADDRESS}/boleto/postback_url`,
             soft_descriptor: 'HASF ENERGIA',
             boleto_instruction: 'Boleto referente ao pagamento de sua fatura de energia',
             boleto_expiration_date: expirate_date.toString(),

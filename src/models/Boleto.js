@@ -27,7 +27,7 @@ const BoletoSchema = new mongoose.Schema({
         type: Date,
         required: [true, 'emissionDate is required']
     },
-    paymentDate: Number,
+    paymentDate: Date,
     status: {
         type: String,
         enum: ['waiting_payment', 'paid', 'delayed'],
