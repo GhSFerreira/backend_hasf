@@ -12,7 +12,8 @@ module.exports = {
         }
 
         let userInfo = {
-            _id: user._id
+            _id: user._id,
+            systemId: user.systemId
         };
 
         return res.json(userInfo);
