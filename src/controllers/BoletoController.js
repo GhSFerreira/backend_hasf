@@ -117,7 +117,7 @@ module.exports = {
 
     /* ----- index all boletos of a specific users ----- */
     async index_byUserId(req,res){
-        const {user_id} = req.body;
+        const {user_id} = req.query;
 
         if (!user_id) {
             return res.json({code: 422, msg: 'user_id params is missing at index_byUserId -> Boleto' })
