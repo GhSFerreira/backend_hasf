@@ -52,7 +52,7 @@ routes.post('/boleto/postback_url', async (req,res) => {
     try {
 
         if (req.body.current_status == 'waiting_payment') {
-            let rtn = await BoletoControllers.store(req,res);
+            const rtn = await BoletoControllers.store(req,res);
 
             if (!rtn.code) {
                 console.log(`--------- START Boleto Created ---------`);
@@ -69,8 +69,8 @@ routes.post('/boleto/postback_url', async (req,res) => {
 
         }else if (req.body.current_status == 'paid') {
 
-            console.log(logginDateTime() + ' boleto paid => boleto/postback_url => ' + rtn);
-            let boletoPaid = await BoletoControllers.update_paid(req.body);
+            const boletoPaid = await BoletoControllers.update_paid(req.body);
+            console.log(logginDateTime() + ' boleto paid => boleto/postback_url => ' + boletoPaid);
 
             return res.json(boletoPaid);
             
