@@ -3,7 +3,8 @@ const axios = require('axios').default;
 const BoletoController = require('../controllers/BoletoController');
 
 /* Method to get funded clients and make boleto for them  */ 
-const makeBoletosMonthFinanciado = new CronJob('0 58 23 10 * *', () => {
+const dateJob = process.env.MAKE_BOLETO_DATE;
+const makeBoletosMonthFinanciado = new CronJob(dateJob, () => {
     
     axios.get('http://localhost:4444/user/find?paymentType=financiado&loanEnded=false')
         .then(rs => {
