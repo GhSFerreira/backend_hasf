@@ -6,7 +6,7 @@ const BoletoController = require('../controllers/BoletoController');
 const dateJob = process.env.MAKE_BOLETO_DATE;
 const makeBoletosMonthFinanciado = new CronJob(dateJob, () => {
     
-    axios.get('http://localhost:4444/user/find?paymentType=financiado&loanEnded=false')
+    axios.get(`http://localhost:${process.env.PORT}/user/find?paymentType=financiado&loanEnded=false`)
         .then(rs => {
             
             rs.data.forEach(clientData => {
