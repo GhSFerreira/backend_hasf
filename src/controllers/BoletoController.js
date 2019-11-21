@@ -195,7 +195,7 @@ module.exports = {
             amount: userData.systemValue,
             payment_method: 'boleto',
             postback_url: `${process.env.SERVER_ADDRESS}/boleto/postback_url`,
-            soft_descriptor: 'HASF ENERGIA',
+            soft_descriptor: 'COOERG',
             boleto_instruction: 'Boleto referente ao pagamento de sua fatura de energia',
             boleto_expiration_date: expirate_date.toString(),
             capture: true,

@@ -41,7 +41,7 @@ module.exports = {
                 let templateStr = await ejs.renderFile(path.join(__dirname,'..', `/views/email/${req.body.template}`), req.body);
     
                 let mailOptions = {
-                    from: 'Hasf Energia <no-reply@hasfenergia.com.br>',
+                    from: 'Cooerg <no-reply@hasfenergia.com.br>',
                     to: `${req.body.mailData.mail}`,
                     subject: `${req.body.subject}`,
                     html: templateStr
@@ -68,7 +68,7 @@ module.exports = {
 
         const mailInfo = {
             body:{ 
-                subject: 'Hasf Energia - Sua fatura de energia já está disponível ',
+                subject: 'Cooerg - Sua fatura de energia já está disponível ',
                 template: 'faturaHasf.ejs',
                 mailData: {
                     name: req.body["transaction[customer][name]"],
