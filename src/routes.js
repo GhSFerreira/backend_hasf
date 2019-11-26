@@ -27,6 +27,7 @@ routes.put('/user', UserControllers.update);
 routes.get('/user', UserControllers.index);
 routes.get('/user/info', UserControllers.show);
 routes.get('/user/find', UserControllers.findUser);
+routes.put('/user/recover-pwd', UserControllers.recoverPwd);
 
 
 /* --------  Boleto routes  ---------*/
@@ -61,6 +62,7 @@ routes.post('/boleto/postback_url', async (req,res) => {
                 await email.mailNewBoleto(req,res);
     
                 console.log(`--------- END Boleto Created ---------`);
+                return res.status(200).json('Boleto Created => ' + rtn);
                 
             }else{
                 console.log(logginDateTime() + ' ERROR: boleto created => boleto/postback_url => ' + rtn);

@@ -1,11 +1,12 @@
 const User = require('../models/User');
 const BoletoControllers = require('./BoletoController');
+const { sendEmail } = require('../config/email');
 
 //Loggin methods
 const logginDateAndTime = require('../config/logginMethods').dateAndTimeLoggin;
 
 module.exports = {
-    /* --- Create user at database ----*/
+    /* ---- Create user at database ----*/
     async store(req,res){
         if (!req.body) {
             return res.json({code: 422, msg: 'create user -> params is missing'});
@@ -74,7 +75,7 @@ module.exports = {
         }
     },
 
-    //TODO: Update user at DB
+    /* ------- UPDATE USER ------- */
     async update(req,res){
         const {_id} = req.headers;
 
@@ -141,4 +142,39 @@ module.exports = {
             return res.json(err);
         }
     },
+
+    async recoverPwd(req,res){
+        if (!req.body.document) {
+            return res.status(400).json({error: {msg: 'Document is missing', locale: "user_recovery_pwd"}});
+        }else if (!req.body.email) {
+            return res.status(400).json({error: {msg: 'Email is missing', locale: "user_recovery_pwd"}});
+        }
+
+        const {document, email} = req.body;
+        try {
+            const user = await User.findOne({document, email});
+
+            if (user._id) {
+                const userUpdated = await User.findByIdAndUpdate(user._id, {pwd : "G24s$ao3"});
+                console.log(logginDateAndTime() + " user => recover password");
+                
+                if (userUpdated) {
+                    await sendEmail({
+                        body:{ 
+                            subject: 'Cooerg - Recuperação de Acesso ',
+                            template: 'recoverPassword.ejs',
+                            mailData: {
+                                name: user.name,
+                                newPassword: "G24s$ao3",
+                                mail: email
+                            }}
+                    }, res);
+                } else {
+                    return res.status(503).json({msg: "Cant recover user password"});
+                }
+            }
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    }
 }
