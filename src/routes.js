@@ -62,7 +62,7 @@ routes.post('/boleto/postback_url', async (req,res) => {
                 await email.mailNewBoleto(req,res);
     
                 console.log(`--------- END Boleto Created ---------`);
-                return res.status(200).json('Boleto Created => ' + rtn);
+                console.log('Boleto Created => ' + rtn);
                 
             }else{
                 console.log(logginDateTime() + ' ERROR: boleto created => boleto/postback_url => ' + rtn);
