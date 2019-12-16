@@ -238,7 +238,7 @@ module.exports = {
                   number: `${customerData.document}`
                 }
               ],
-              phone_numbers: [`${customerData.phone}`]
+              phone_numbers: [`+55${customerData.phone}`]
             }))
             .then(customer => {
                 resolve(customer);
